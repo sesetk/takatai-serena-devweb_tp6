@@ -1,0 +1,31 @@
+import express from 'express';
+import morgan from 'morgan';
+import createError from 'http-errors';
+import { PORT, log } from './config.mjs';
+import apiV1Router from './router/api-v1.mjs';
+import './database/database.mjs'; // ouvre la connexion et crée le schéma si besoin
+
+const app = express();
+
+app.disable('x-powered-by');
+
+app.use(morgan('dev'));
+app.use(express.json());
+
+app.use('/api-v1', apiV1Router);
+
+app.use((req, res, next) => {
+  next(createError(404, 'Route non trouvée'));
+});
+
+app.use((err, req, res, next) => {
+  res.status(err.status || 500);
+  res.json({
+    message: err.message,
+    error: process.env.NODE_ENV === 'development' ? err.stack : {}
+  });
+});
+
+app.listen(PORT, () => {
+  log.info(`Serveur démarré sur http://localhost:${PORT}`);
+});

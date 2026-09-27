@@ -1,0 +1,35 @@
+{
+  "name": "takatai-serena-devweb_tp6",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+"scripts": {
+  "start": "node server.mjs",
+  "dev": "cross-env NODE_ENV=development nodemon server.mjs",
+  "prod": "cross-env NODE_ENV=production node server.mjs"
+},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sesetk/takatai-serena-devweb_tp6.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sesetk/takatai-serena-devweb_tp6/issues"
+  },
+  "homepage": "https://github.com/sesetk/takatai-serena-devweb_tp6#readme",
+  "dependencies": {
+    "dotenv": "^18.0.4",
+    "express": "^5.2.1",
+    "http-errors": "^2.0.1",
+    "loglevel": "^1.9.2",
+    "morgan": "^1.12.1",
+    "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "nodemon": "^3.1.14"
+  }
+}
