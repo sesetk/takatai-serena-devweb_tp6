@@ -35,3 +35,8 @@ POST / : infos du lien créé en JSON, page avec le lien en HTML.
 - Le formulaire envoie POST /api-v2/ avec fetch en JSON, sans recharger la page.
 - Le lien raccourci ou le message d'erreur (URL invalide, serveur injoignable) est affiché dynamiquement, et un bouton « Copier l'URL » copie le lien.
 - La première ligne de static/app.js permet de servir la page depuis un autre serveur.
+
+## Partie 5 : gestion de la suppression des liens
+- Ajout d'une colonne secret en base : un secret aléatoire est créé avec chaque lien et renvoyé une seule fois, dans la réponse JSON de POST /api-v2/. Il n'est jamais renvoyé par GET /api-v2/:url.
+- Nouvelle route DELETE /api-v2/:url, protégée par l'en-tête X-API-Key : 404 si le lien n'existe pas, 401 si l'en-tête est absent, 403 si le secret est incorrect, 200 et suppression en base sinon.
+- Documentation OpenAPI complétée dans static/open-api.yaml affichée avec Swagger UI sur /api-docs.
