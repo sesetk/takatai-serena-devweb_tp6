@@ -23,6 +23,7 @@
   "homepage": "https://github.com/sesetk/takatai-serena-devweb_tp6#readme",
   "dependencies": {
     "dotenv": "^18.0.4",
+    "ejs": "^6.0.1",
     "express": "^5.2.1",
     "http-errors": "^2.0.1",
     "loglevel": "^1.9.2",

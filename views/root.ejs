@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Réducteur d'URL</title>
+    <style>
+      body { font-family: sans-serif; max-width: 40rem; margin: 3rem auto; padding: 0 1rem; }
+      form { display: flex; flex-direction: column; gap: 0.75rem; }
+      input, button { padding: 0.5rem; font-size: 1rem; }
+      .error { color: #b00020; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Réducteur d'URL</h1>
+
+      <% if (error) { %>
+        <p class="error"><%= error %></p>
+      <% } %>
+
+      <% if (link) { %>
+        <p>Lien créé :</p>
+        <p><a href="<%= link.short %>"><%= link.short %></a></p>
+        <p>Il redirige vers : <%= link.origin %></p>
+        <p><a href="/api-v2/">Raccourcir une autre URL</a></p>
+      <% } else { %>
+        <form method="post" action="/api-v2/" id="submit-link">
+          <label for="url">Type the URL to shorten</label>
+          <input name="url" id="url" type="url" placeholder="https://perdu.com" required />
+          <button type="submit">Submit</button>
+        </form>
+      <% } %>
+    </main>
+  </body>
+</html>
