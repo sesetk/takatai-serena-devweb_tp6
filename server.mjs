@@ -13,6 +13,7 @@ import { parse } from 'yaml';
 
 
 const app = express();
+app.set('trust proxy', 1);
 
 app.disable("x-powered-by");
 
