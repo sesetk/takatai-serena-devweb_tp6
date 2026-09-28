@@ -8,6 +8,7 @@ import favicon from "serve-favicon";
 import path from "path";
 import apiV2Router from './router/api-v2.mjs';
 
+
 const app = express();
 
 app.disable("x-powered-by");
@@ -20,13 +21,19 @@ app.use(morgan("dev"));
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: false }));
+app.use(
+  express.static(path.join(process.cwd(), 'static'), { index: 'client.html' }),
+);
 
 app.use((req, res, next) => {
   res.set("X-API-version", "1.0.0");
   next();
 });
 
+
 app.use("/api-v1", apiV1Router);
+
+//app.use('/api-v2', cors());
 app.use('/api-v2', apiV2Router); 
 
 app.use((req, res, next) => {
