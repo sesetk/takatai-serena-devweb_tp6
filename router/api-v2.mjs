@@ -1,15 +1,22 @@
 import { Router } from 'express';
 import createError from 'http-errors';
-import { countLinks, getLink, incrementVisit } from '../database/database.mjs';
+import {
+  countLinks,
+  deleteLink,
+  getLink,
+  incrementVisit,
+} from '../database/database.mjs';
 import {
   buildShortUrl,
   createUniqueLink,
   isValidUrl,
+  secretsMatch,
   toIsoDate,
 } from '../services/links.mjs';
 
 const router = Router();
 
+// cette route ne sait répondre qu'en JSON ou en HTML : sinon 406 Not Acceptable.
 router.use((req, res, next) => {
   if (req.accepts(['json', 'html'])) {
     next();
@@ -18,7 +25,7 @@ router.use((req, res, next) => {
   }
 });
 
-// GET / : JSON = nombre de liens, HTML = page d'accueil avec le formulaire
+// GET / : JSON : nombre de liens, HTML page d'accueil avec le formulaire
 router.get('/', async (req, res, next) => {
   try {
     const count = await countLinks();
@@ -31,7 +38,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// POST / : JSON = infos du lien créé, HTML = page avec le lien créé
+// POST / : JSON : infos du lien créé, HTML page avec le lien créé
 router.post('/', async (req, res, next) => {
   try {
     const url = req.body?.url;
@@ -44,11 +51,11 @@ router.post('/', async (req, res, next) => {
       });
     }
 
-    const code = await createUniqueLink(url);
+    const { code, secret } = await createUniqueLink(url);
     const link = { short: buildShortUrl(req, code), origin: url };
 
     res.format({
-      json: () => res.status(201).json(link),
+      json: () => res.status(201).json({ ...link, secret }),
       html: () => res.status(201).render('root', { link, error: null }),
     });
   } catch (err) {
@@ -60,9 +67,7 @@ router.get('/error', (req, res, next) => {
   next(createError(500, 'Erreur volontaire pour les tests'));
 });
 
-// GET /:url : JSON = infos du lien (ancien /status/:url),
-// HTML = incrémente le compteur de visites puis redirige.
-// Il n'y a plus de route /status/:url dans la v2.
+// GET /:url : JSON : infos du lien, HTML incrémente le compteur puis redirige
 router.get('/:url', async (req, res, next) => {
   try {
     const code = req.params.url;
@@ -79,13 +84,36 @@ router.get('/:url', async (req, res, next) => {
           visit: link.visit,
         }),
       html: () => {
-        // La fonction n'est pas async : on chaîne la promesse et on
-        // transmet toute erreur à next, sinon elle serait perdue.
         incrementVisit(code)
           .then(() => res.redirect(link.target_url))
           .catch(next);
       },
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /:url : supprime le lien, réservé à son auteur 
+router.delete('/:url', async (req, res, next) => {
+  try {
+    const code = req.params.url;
+
+    const link = await getLink(code);
+    if (!link) {
+      return next(createError(404, 'Lien inconnu'));
+    }
+
+    const apiKey = req.get('X-API-Key');
+    if (!apiKey) {
+      return next(createError(401, 'En-tête X-API-Key manquant'));
+    }
+    if (!secretsMatch(apiKey, link.secret)) {
+      return next(createError(403, 'Secret incorrect pour ce lien'));
+    }
+
+    await deleteLink(code);
+    res.status(200).json({ message: 'Lien supprimé' });
   } catch (err) {
     next(err);
   }

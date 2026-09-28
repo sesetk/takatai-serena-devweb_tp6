@@ -54,26 +54,30 @@ export async function countLinks() {
   return row.count;
 }
 
-export async function createLink(shortUrl, targetUrl) {
-  await run("INSERT INTO links (short_url, target_url) VALUES (?, ?)", [
-    shortUrl,
-    targetUrl,
-  ]);
-}
-
-// Renvoie la ligne du lien, ou undefined si le code n'existe pas
-export async function getLink(shortUrl) {
-  return get(
-    "SELECT short_url, target_url, created_at, visit FROM links WHERE short_url = ?",
-    [shortUrl],
+export async function createLink(shortUrl, targetUrl, secret) {
+  await run(
+    'INSERT INTO links (short_url, target_url, secret) VALUES (?, ?, ?)',
+    [shortUrl, targetUrl, secret],
   );
 }
 
+export async function getLink(shortUrl) {
+  return get(
+    'SELECT short_url, target_url, secret, created_at, visit FROM links WHERE short_url = ?',
+    [shortUrl],
+  );
+}
 // Ajoute 1 au compteur de visite (renvoie le nombre de lignes modifiées 0 ou 1)
 export async function incrementVisit(shortUrl) {
   const result = await run(
     "UPDATE links SET visit = visit + 1 WHERE short_url = ?",
     [shortUrl],
   );
+  return result.changes;
+}
+
+// Supprime le lien, renvoie le nombre de lignes supprimées (0 ou 1)
+export async function deleteLink(shortUrl) {
+  const result = await run('DELETE FROM links WHERE short_url = ?', [shortUrl]);
   return result.changes;
 }

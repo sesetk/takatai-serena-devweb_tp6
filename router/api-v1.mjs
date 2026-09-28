@@ -27,7 +27,8 @@ router.post('/', async (req, res, next) => {
       return next(createError(400, 'URL invalide'));
     }
 
-    const code = await createUniqueLink(url);
+    
+    const { code } = await createUniqueLink(url);     
     res.status(201).json({ short: buildShortUrl(req, code), origin: url });
   } catch (err) {
     next(err);
