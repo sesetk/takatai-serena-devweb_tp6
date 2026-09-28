@@ -1,7 +1,7 @@
-import fs from 'fs';
-import path from 'path';
-import sqlite3pkg from 'sqlite3';
-import { DB_FILE, DB_SCHEMA, log } from '../config.mjs';
+import fs from "fs";
+import path from "path";
+import sqlite3pkg from "sqlite3";
+import { DB_FILE, DB_SCHEMA, log } from "../config.mjs";
 
 const sqlite3 = sqlite3pkg.verbose();
 
@@ -14,18 +14,18 @@ const dbExisted = fs.existsSync(DB_FILE);
 
 export const db = new sqlite3.Database(DB_FILE, (err) => {
   if (err) {
-    log.error('Erreur ouverture base de données :', err.message);
+    log.error("Erreur ouverture base de données :", err.message);
     return;
   }
   log.info(`Base de données connectée (${DB_FILE})`);
 
   if (!dbExisted) {
-    const schema = fs.readFileSync(DB_SCHEMA, 'utf8');
+    const schema = fs.readFileSync(DB_SCHEMA, "utf8");
     db.exec(schema, (err) => {
       if (err) {
-        log.error('Erreur création du schéma :', err.message);
+        log.error("Erreur création du schéma :", err.message);
       } else {
-        log.info('Schéma de base de données créé avec succès');
+        log.info("Schéma de base de données créé avec succès");
       }
     });
   }
@@ -50,13 +50,30 @@ function get(sql, params = []) {
 }
 
 export async function countLinks() {
-  const row = await get('SELECT COUNT(*) AS count FROM links');
+  const row = await get("SELECT COUNT(*) AS count FROM links");
   return row.count;
 }
 
 export async function createLink(shortUrl, targetUrl) {
-  await run('INSERT INTO links (short_url, target_url) VALUES (?, ?)', [
+  await run("INSERT INTO links (short_url, target_url) VALUES (?, ?)", [
     shortUrl,
     targetUrl,
   ]);
+}
+
+// Renvoie la ligne du lien, ou undefined si le code n'existe pas
+export async function getLink(shortUrl) {
+  return get(
+    "SELECT short_url, target_url, created_at, visit FROM links WHERE short_url = ?",
+    [shortUrl],
+  );
+}
+
+// Ajoute 1 au compteur de visite (renvoie le nombre de lignes modifiées 0 ou 1)
+export async function incrementVisit(shortUrl) {
+  const result = await run(
+    "UPDATE links SET visit = visit + 1 WHERE short_url = ?",
+    [shortUrl],
+  );
+  return result.changes;
 }
