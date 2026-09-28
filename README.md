@@ -29,3 +29,9 @@ POST / : infos du lien créé en JSON, page avec le lien en HTML.
 - GET /: url : infos du lien en JSON et en HTML incrémente le compteur de visites puis redirige.
 - Pages HTML générées côté serveur avec EJS et lecture des formulaires.
 - Logique commune aux deux versions de l'API factorisée dans services/links.mjs.
+
+## Partie 4 : client AJAX de l’API v2
+- Ajout d'un client de type Single Page Application, servi par Express : static/client.html et static/app.js.
+- Le formulaire envoie POST /api-v2/ avec fetch en JSON, sans recharger la page.
+- Le lien raccourci ou le message d'erreur (URL invalide, serveur injoignable) est affiché dynamiquement, et un bouton « Copier l'URL » copie le lien.
+- La première ligne de static/app.js permet de servir la page depuis un autre serveur.
