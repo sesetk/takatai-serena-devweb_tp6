@@ -7,6 +7,9 @@ import "./database/database.mjs";
 import favicon from "serve-favicon";
 import path from "path";
 import apiV2Router from './router/api-v2.mjs';
+import fs from 'fs';
+import swaggerUi from 'swagger-ui-express';
+import { parse } from 'yaml';
 
 
 const app = express();
@@ -30,6 +33,10 @@ app.use((req, res, next) => {
   next();
 });
 
+const openApiDocument = parse(
+  fs.readFileSync(path.join(process.cwd(), 'static', 'open-api.yaml'), 'utf8'),
+);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
 app.use("/api-v1", apiV1Router);
 

@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/sesetk/takatai-serena-devweb_tp6#readme",
   "dependencies": {
+    "cors": "^2.8.6",
     "dotenv": "^18.0.4",
     "ejs": "^6.0.1",
     "express": "^5.2.1",
@@ -29,7 +30,9 @@
     "loglevel": "^1.9.2",
     "morgan": "^1.12.1",
     "serve-favicon": "^2.5.1",
-    "sqlite3": "^6.0.1"
+    "sqlite3": "^6.0.1",
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "cross-env": "^10.1.0",

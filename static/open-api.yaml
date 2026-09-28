@@ -1,0 +1,232 @@
+openapi: 3.0.3
+info:
+  title: Réducteur d'URL
+  description: >-
+    Service de réduction d'URL. L'API v1 répond uniquement en JSON.
+    L'API v2 négocie le contenu (JSON ou HTML) selon l'en-tête `Accept`
+    et permet de supprimer un lien avec son secret.
+  version: 2.0.0
+servers:
+  - url: /api-v2
+    description: API v2 (négociation de contenu, suppression)
+  - url: /api-v1
+    description: API v1 (JSON uniquement)
+tags:
+  - name: shortener
+    description: Création, consultation et suppression de liens raccourcis
+paths:
+  /:
+    get:
+      tags: [shortener]
+      summary: Nombre de liens déjà créés
+      description: En HTML (API v2 seulement), renvoie la page d'accueil avec le formulaire.
+      responses:
+        '200':
+          description: Nombre de liens
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkCount'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+    post:
+      tags: [shortener]
+      summary: Crée un lien raccourci
+      description: >-
+        Vérifie que l'URL est syntaxiquement valide (http ou https).
+        Avec l'API v2, la réponse contient le `secret` qui permet de supprimer
+        le lien ; il n'est donné qu'à la création.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewLinkRequest'
+      responses:
+        '201':
+          description: Lien créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedLink'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+  /status/{url}:
+    get:
+      tags: [shortener]
+      summary: État d'un lien (API v1 uniquement)
+      description: >-
+        Supprimée dans l'API v2, remplacée par `GET /{url}` avec
+        `Accept: application/json`.
+      parameters:
+        - $ref: '#/components/parameters/UrlCode'
+      responses:
+        '200':
+          description: État du lien
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkStatus'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /{url}:
+    get:
+      tags: [shortener]
+      summary: Consulte ou visite un lien
+      description: >-
+        API v1 : redirige vers l'URL d'origine (302) et incrémente le compteur
+        de visites. API v2 : avec `Accept: application/json`, renvoie l'état du
+        lien sans incrémenter le compteur ; avec `Accept: text/html`, redirige
+        et incrémente le compteur. Le secret n'est jamais renvoyé.
+      parameters:
+        - $ref: '#/components/parameters/UrlCode'
+      responses:
+        '200':
+          description: État du lien (API v2, JSON)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkStatus'
+        '302':
+          description: Redirection vers l'URL d'origine
+          headers:
+            Location:
+              description: URL d'origine
+              schema:
+                type: string
+                format: uri
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+    delete:
+      tags: [shortener]
+      summary: Supprime un lien (API v2 uniquement)
+      description: >-
+        Réservé à l'auteur du lien : le secret reçu à la création doit être
+        fourni dans l'en-tête `X-API-Key`.
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UrlCode'
+      responses:
+        '200':
+          description: Lien supprimé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletedLink'
+        '401':
+          description: En-tête `X-API-Key` absent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Le secret ne correspond pas à ce lien
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Secret donné à la création du lien
+  parameters:
+    UrlCode:
+      name: url
+      in: path
+      required: true
+      description: Code court du lien
+      schema:
+        type: string
+      example: aB3xYz
+  schemas:
+    LinkCount:
+      type: object
+      required: [count]
+      properties:
+        count:
+          type: integer
+          example: 3
+    NewLinkRequest:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+          format: uri
+          example: https://perdu.com
+    CreatedLink:
+      type: object
+      required: [short, origin]
+      properties:
+        short:
+          type: string
+          format: uri
+          example: http://localhost:8080/api-v2/aB3xYz
+        origin:
+          type: string
+          format: uri
+          example: https://perdu.com
+        secret:
+          type: string
+          description: Secret de suppression (API v2 uniquement)
+          example: 4kJ9vQ2mX8rT1zLp0wYb7A
+    LinkStatus:
+      type: object
+      required: [origin, created_at, visit]
+      properties:
+        origin:
+          type: string
+          format: uri
+          example: https://perdu.com
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-09-28T01:23:45.000Z'
+        visit:
+          type: integer
+          example: 2
+    DeletedLink:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          example: Lien supprimé
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          example: Lien inconnu
+        error:
+          description: Détails techniques, remplis seulement en développement
+  responses:
+    BadRequest:
+      description: URL invalide
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Lien inconnu
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotAcceptable:
+      description: Format demandé non géré (ni JSON ni HTML)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
