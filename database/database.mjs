@@ -30,3 +30,33 @@ export const db = new sqlite3.Database(DB_FILE, (err) => {
     });
   }
 });
+
+function run(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function (err) {
+      if (err) reject(err);
+      else resolve(this);
+    });
+  });
+}
+
+function get(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+}
+
+export async function countLinks() {
+  const row = await get('SELECT COUNT(*) AS count FROM links');
+  return row.count;
+}
+
+export async function createLink(shortUrl, targetUrl) {
+  await run('INSERT INTO links (short_url, target_url) VALUES (?, ?)', [
+    shortUrl,
+    targetUrl,
+  ]);
+}
