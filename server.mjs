@@ -1,23 +1,23 @@
 import express from "express";
 import morgan from "morgan";
 import createError from "http-errors";
-import { PORT, log } from "./config.mjs";
+import { NODE_ENV, PORT, log } from "./config.mjs";
 import apiV1Router from "./router/api-v1.mjs";
-import "./database/database.mjs"; 
-import favicon from 'serve-favicon';
-import path from 'path';
+import "./database/database.mjs";
+import favicon from "serve-favicon";
+import path from "path";
 
 const app = express();
 
 app.disable("x-powered-by");
 
-app.use(favicon(path.join(process.cwd(), 'static', 'logo_univ_16.png')));
+app.use(favicon(path.join(process.cwd(), "static", "logo_univ_16.png")));
 
 app.use(morgan("dev"));
 app.use(express.json());
 
 app.use((req, res, next) => {
-  res.set('X-API-version', '1.0.0');
+  res.set("X-API-version", "1.0.0");
   next();
 });
 
@@ -31,7 +31,7 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500);
   res.json({
     message: err.message,
-    error: process.env.NODE_ENV === "development" ? err.stack : {},
+    error: NODE_ENV === "development" ? err.stack : {},
   });
 });
 
